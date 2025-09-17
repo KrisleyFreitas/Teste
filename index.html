@@ -27,6 +27,31 @@
       cursor: pointer;
     }
     .leaflet-control-home:hover { background: #f0f0f0; }
+
+
+    .leaflet-tooltip.road-label {
+        /* Remove a caixa branca */
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+
+        /* Rotação e alinhamento */
+        transform: rotate(90deg);
+        transform-origin: center;
+        margin: 0;
+
+        display: inline-block;
+
+        /* Estilos do texto */
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        text-shadow:
+            -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000;
+    }
   </style>
 </head>
 <body>
@@ -89,14 +114,16 @@
         onEachFeature: onEachFeature
       }).addTo(map);
 
+  
+
       // Logradouros (linha + label)
       fetch("Logradouro.geojson").then(res => res.json()).then(data => {
         logradouroLayer = L.geoJSON(data, {
           style: { color: "black", weight: 2 },
           onEachFeature: function (feature, layer) {
             onEachFeature(feature, layer);
-            if (feature.properties && feature.properties.nome) {
-              layer.bindTooltip(feature.properties.nome, {
+            if (feature.properties && feature.properties.Logradouro) {
+              layer.bindTooltip(feature.properties.Logradouro, {
                 permanent: true,
                 direction: "center",
                 className: "road-label"
