@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-mouse-position@1.0.0/L.Control.MousePosition.css"/>
   <script src="https://unpkg.com/leaflet-mouse-position@1.0.0/L.Control.MousePosition.js"></script>
 
+
   <style>
     body { margin: 0; }
     #map { width: 100%; height: 100vh; }
@@ -150,12 +151,14 @@
     // Barra de escala
     L.control.scale().addTo(map);
 
-    // Caixinha de coordenadas
-    L.control.mousePosition({
-      position: 'bottomright',
-      numDigits: 6,
-      prefix: "Coordenadas:"
-    }).addTo(map);
+    // Mostrar coordenadas no título do mapa ao mover o mouse
+    map.on("mousemove", function(e) {
+      map.getContainer().style.cursor = "crosshair"; // cursor tipo cruz
+      map.getContainer().title = `Lat: ${e.latlng.lat.toFixed(6)}, Lng: ${e.latlng.lng.toFixed(6)}`;
+    });
+
+
+
   </script>
 </body>
 </html>
