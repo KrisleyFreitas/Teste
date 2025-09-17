@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa Itamarati de Minas</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Geocoder -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+  <!-- Coordenadas do mouse -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-mouse-position@1.0.0/L.Control.MousePosition.css"/>
+  <script src="https://unpkg.com/leaflet-mouse-position@1.0.0/L.Control.MousePosition.js"></script>
+
+  <style>
+    body { margin: 0; }
+    #map { width: 100%; height: 100vh; }
+
+    .leaflet-control-home {
+      background: white;
+      padding: 6px;
+      border-radius: 4px;
+      box-shadow: 0 0 3px rgba(0,0,0,0.4);
+      cursor: pointer;
+    }
+    .leaflet-control-home:hover { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    var map = L.map('map').setView([-21.1452, -42.7965], 19);
+
+    // --- Camadas base ---
+    var ortofoto = L.tileLayer('./tiles/{z}/{x}/{y}.png', {
+      minZoom: 0, maxZoom: 21,
+      attribution: '&copy; QGIS Export'
+    }).addTo(map);
+
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    });
+
+    var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles © Esri'
+    });
+
+    // Função hover + popup
+    function onEachFeature(feature, layer) {
+      layer.defaultOptions = {
+        color: layer.options.color,
+        weight: layer.options.weight,
+        fillOpacity: layer.options.fillOpacity
+      };
+
+      layer.on("mouseover", function () {
+        layer.setStyle({ color: "yellow", weight: 3 });
+      });
+      layer.on("mouseout", function () {
+        layer.setStyle(layer.defaultOptions);
+      });
+
+      layer.on("click", function (e) {
+        let html = "<b>Atributos:</b><br><ul>";
+        for (let key in feature.properties) {
+          let value = feature.properties[key];
+          if (typeof value === "number" && ("Área")) {
+            value = value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " m²";
+          }
+          html += `<li><b>${key}</b>: ${value}</li>`;
+        }
+        html += "</ul>";
+        L.popup().setLatLng(e.latlng).setContent(html).openOn(map);
+      });
+    }
+
+    // --- Camadas GeoJSON ---
+    var loteLayer, logradouroLayer, limiteLayer;
+
+    // Lotes (só borda)
+    fetch("Lote.geojson").then(res => res.json()).then(data => {
+      loteLayer = L.geoJSON(data, {
+        style: { color: "yellow", weight: 2, fillOpacity: 0 }, // sem preenchimento
+        onEachFeature: onEachFeature
+      }).addTo(map);
+
+      // Logradouros (linha + label)
+      fetch("Logradouro.geojson").then(res => res.json()).then(data => {
+        logradouroLayer = L.geoJSON(data, {
+          style: { color: "black", weight: 2 },
+          onEachFeature: function (feature, layer) {
+            onEachFeature(feature, layer);
+            if (feature.properties && feature.properties.nome) {
+              layer.bindTooltip(feature.properties.nome, {
+                permanent: true,
+                direction: "center",
+                className: "road-label"
+              });
+            }
+          }
+        }).addTo(map);
+
+        // Limite municipal (só borda)
+        fetch("Limite.geojson").then(res => res.json()).then(data => {
+          limiteLayer = L.geoJSON(data, {
+            style: { color: "blue", weight: 3, fillOpacity: 0 }, // só bordas
+            onEachFeature: onEachFeature
+          });
+
+          // Controle de camadas
+          var baseMaps = {
+            "Ortofoto": ortofoto,
+            "OSM": osm,
+            "Esri Satélite": esriSat
+          };
+
+          var overlays = {
+            "Lotes": loteLayer,
+            "Logradouro": logradouroLayer,
+            "Limite municipal": limiteLayer
+          };
+
+          L.control.layers(baseMaps, overlays, { position: 'topleft' }).addTo(map);
+        });
+      });
+    });
+
+    // Geocoder
+    L.Control.geocoder({ defaultMarkGeocode: true }).addTo(map);
+
+    // Botão Home
+    var homeControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function (map) {
+        var container = L.DomUtil.create('div', 'leaflet-control-home');
+        container.innerHTML = "🏠";
+        container.title = "Voltar para início";
+        container.onclick = function () {
+          map.setView([-21.1452, -42.7965], 19);
+        };
+        return container;
+      }
+    });
+    map.addControl(new homeControl());
+
+    // Barra de escala
+    L.control.scale().addTo(map);
+
+    // Caixinha de coordenadas
+    L.control.mousePosition({
+      position: 'bottomright',
+      numDigits: 6,
+      prefix: "Coordenadas:"
+    }).addTo(map);
+  </script>
+</body>
+</html>
