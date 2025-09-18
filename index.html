@@ -72,7 +72,7 @@
     });
 
     var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles © Esri'
+      attribution: 'Tiles © Esri, Maxar, Earthstar Geographics'
     });
 
     // Função hover + popup
@@ -132,7 +132,7 @@
           }
         }).addTo(map);
 
-        // Limite municipal (só borda)
+        // Limite municipal 
         fetch("Limite.geojson").then(res => res.json()).then(data => {
           limiteLayer = L.geoJSON(data, {
             style: { color: "blue", weight: 3, fillOpacity: 0 }, // só bordas
@@ -142,7 +142,7 @@
           // Controle de camadas
           var baseMaps = {
             "Ortofoto": ortofoto,
-            "OSM": osm,
+            "OpenStreetMap": osm,
             "Esri Satélite": esriSat
           };
 
@@ -178,7 +178,7 @@
     // Barra de escala
     L.control.scale().addTo(map);
 
-    // Mostrar coordenadas no título do mapa ao mover o mouse
+    // Mostrar coordenadas do mapa ao mover o mouse
     map.on("mousemove", function(e) {
       map.getContainer().style.cursor = "crosshair"; // cursor tipo cruz
       map.getContainer().title = `Lat: ${e.latlng.lat.toFixed(6)}, Lng: ${e.latlng.lng.toFixed(6)}`;
