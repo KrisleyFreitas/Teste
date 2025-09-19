@@ -5,15 +5,10 @@
   <title>Guidoval</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Geocoder -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-
-  <!-- Coordenadas do mouse -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-mouse-position@1.0.0/L.Control.MousePosition.css"/>
   <script src="https://unpkg.com/leaflet-mouse-position@1.0.0/L.Control.MousePosition.js"></script>
-
 
   <style>
     body { margin: 0; }
@@ -59,8 +54,6 @@
 
   <script>
     var map = L.map('map').setView([-21.1452, -42.7965], 19);
-
-    // --- Camadas base ---
     var ortofoto = L.tileLayer('./tiles/{z}/{x}/{y}.png', {
       minZoom: 0, maxZoom: 21,
       attribution: '&copy; QGIS Export'
@@ -74,8 +67,6 @@
     var esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles © Esri, Maxar, Earthstar Geographics'
     });
-
-    // Função hover + popup
     function onEachFeature(feature, layer) {
       layer.defaultOptions = {
         color: layer.options.color,
@@ -103,20 +94,13 @@
         L.popup().setLatLng(e.latlng).setContent(html).openOn(map);
       });
     }
-
-    // --- Camadas GeoJSON ---
     var loteLayer, logradouroLayer, limiteLayer;
-
-    // Lotes (só borda)
     fetch("Lote.geojson").then(res => res.json()).then(data => {
       loteLayer = L.geoJSON(data, {
-        style: { color: "yellow", weight: 2, fillOpacity: 0 }, // sem preenchimento
+        style: { color: "yellow", weight: 2, fillOpacity: 0 }, 
         onEachFeature: onEachFeature
       }).addTo(map);
 
-  
-
-      // Logradouros (linha + label)
       fetch("Logradouro.geojson").then(res => res.json()).then(data => {
         logradouroLayer = L.geoJSON(data, {
           style: { color: "black", weight: 2 },
@@ -132,14 +116,12 @@
           }
         }).addTo(map);
 
-        // Limite municipal 
         fetch("Limite.geojson").then(res => res.json()).then(data => {
           limiteLayer = L.geoJSON(data, {
             style: { color: "blue", weight: 3, fillOpacity: 0 }, // só bordas
             onEachFeature: onEachFeature
           });
 
-          // Controle de camadas
           var baseMaps = {
             "Ortofoto": ortofoto,
             "OpenStreetMap": osm,
@@ -157,10 +139,8 @@
       });
     });
 
-    // Geocoder
     L.Control.geocoder({ defaultMarkGeocode: true }).addTo(map);
 
-    // Botão Home
     var homeControl = L.Control.extend({
       options: { position: 'topleft' },
       onAdd: function (map) {
@@ -174,17 +154,11 @@
       }
     });
     map.addControl(new homeControl());
-
-    // Barra de escala
     L.control.scale().addTo(map);
-
-    // Mostrar coordenadas do mapa ao mover o mouse
     map.on("mousemove", function(e) {
-      map.getContainer().style.cursor = "crosshair"; // cursor tipo cruz
+      map.getContainer().style.cursor = "crosshair"; 
       map.getContainer().title = `Lat: ${e.latlng.lat.toFixed(6)}, Lng: ${e.latlng.lng.toFixed(6)}`;
     });
-
-
 
   </script>
 </body>
